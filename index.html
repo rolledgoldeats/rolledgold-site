@@ -93,16 +93,15 @@ tailwind.config = {
   <section id="top" class="relative min-h-[92vh] flex items-end overflow-hidden bg-ink-950">
     <!-- Cinema HD Hero Background Video -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
-      <video id="heroVideoPlayer" autoplay loop muted playsinline poster="videos/hero_frying_poster.jpg" class="w-full h-full object-cover object-[75%_center] md:object-[70%_center] opacity-45 mix-blend-screen scale-105 transition-opacity duration-1000">
+      <video id="heroVideoPlayer" autoplay loop muted playsinline poster="videos/hero_frying_poster.jpg" class="w-full h-full object-cover object-center md:object-[68%_center] opacity-85 md:opacity-90 transition-opacity duration-700">
         <source src="videos/hero_frying_bg.webm" type="video/webm">
         <source src="videos/hero_frying_bg.mp4" type="video/mp4">
       </video>
     </div>
-    <!-- Dark Luxury Gradient Shields & Vignette for Flawless Contrast -->
-    <div class="absolute inset-0 bg-ink-950/30 pointer-events-none"></div>
-    <div class="absolute inset-0 bg-gradient-to-r from-ink-950 via-ink-950/92 md:via-ink-950/80 to-transparent pointer-events-none"></div>
-    <div class="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/60 to-transparent pointer-events-none"></div>
-    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(201,163,73,0.12),transparent_70%)] pointer-events-none"></div>
+    <!-- Dark Luxury Gradient Shields: Solid Left for Text Legibility, Pristine Right for Sizzle Clarity -->
+    <div class="absolute inset-0 bg-gradient-to-r from-ink-950 via-ink-950/90 md:via-ink-950/60 to-transparent pointer-events-none"></div>
+    <div class="absolute bottom-0 inset-x-0 h-44 bg-gradient-to-t from-ink-950 via-ink-950/40 to-transparent pointer-events-none"></div>
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(201,163,73,0.08),transparent_60%)] pointer-events-none"></div>
     <div class="relative max-w-[1400px] mx-auto px-6 md:px-10 pb-20 pt-40 w-full">
       <div class="max-w-xl">
         <h1 class="font-serif text-[13vw] md:text-[64px] leading-[0.98] mb-7">
@@ -113,7 +112,11 @@ tailwind.config = {
         </p>
         <div class="flex flex-wrap gap-4">
           <a href="#order" class="btn-solid px-7 py-3.5 rounded-sm font-semibold text-sm">Reserve for pickup</a>
-          <button onclick="playCrunch()" class="btn-line px-6 py-3.5 rounded-sm text-sm font-medium">Hear the crunch</button>
+          <button id="heroAudioToggleBtn" onclick="toggleHeroAudio()" class="btn-line px-5 py-3.5 rounded-sm text-sm font-medium inline-flex items-center gap-2 transition-all">
+            <i id="heroAudioIcon" data-lucide="volume-x" class="w-4 h-4 text-gold-400"></i>
+            <span id="heroAudioLabel">Hear the fry</span>
+          </button>
+          <button onclick="playCrunch()" class="btn-line px-5 py-3.5 rounded-sm text-sm font-medium">Hear the crunch</button>
         </div>
       </div>
     </div>
@@ -427,7 +430,24 @@ document.addEventListener('DOMContentLoaded', () => {
   if(m) m.addEventListener('click', e => { if(e.target === m) closeModal(); });
 });
 
+let authenticCrunchAudio = null;
 function playCrunch(){
+  try{
+    if(!authenticCrunchAudio){
+      authenticCrunchAudio = new Audio('videos/fry_pull_soundbite.mp3');
+      authenticCrunchAudio.preload = 'auto';
+    }
+    authenticCrunchAudio.currentTime = 0;
+    authenticCrunchAudio.volume = 0.9;
+    authenticCrunchAudio.play().catch(function(){
+      playSyntheticCrunch();
+    });
+  }catch(e){
+    playSyntheticCrunch();
+  }
+}
+
+function playSyntheticCrunch(){
   try{
     const ctx = getAudioCtx();
     if(!ctx) return;
@@ -584,64 +604,63 @@ function switchFryVideo(mode){
   }
 }
 
-// Deep frying continuous audio synthesizer via Web Audio
-let sizzleSource = null, sizzleGain = null, sizzlePlaying = false;
+// Hero video audio toggle
+function toggleHeroAudio(){
+  toggleSizzleAudio();
+}
+
+// Deep frying authentic audio player
+let sizzlePlaying = false;
+let authenticSizzleAudio = null;
+
 function toggleSizzleAudio(){
-  const btn = document.getElementById('frySizzleSoundBtn');
-  const icon = document.getElementById('sizzleSoundIcon');
+  const fryBtn = document.getElementById('frySizzleSoundBtn');
+  const fryIcon = document.getElementById('sizzleSoundIcon');
+  const heroBtn = document.getElementById('heroAudioToggleBtn');
+  const heroIcon = document.getElementById('heroAudioIcon');
+  const heroLabel = document.getElementById('heroAudioLabel');
+
   if(!sizzlePlaying){
     startSizzleAudio();
     sizzlePlaying = true;
-    btn.classList.add('border-gold-400', 'bg-gold-500/20');
-    icon.setAttribute('data-lucide', 'volume-2');
+    if(fryBtn) fryBtn.classList.add('border-gold-400', 'bg-gold-500/20');
+    if(fryIcon) fryIcon.setAttribute('data-lucide', 'volume-2');
+    if(heroBtn) heroBtn.classList.add('border-gold-400', 'bg-gold-500/20');
+    if(heroIcon) heroIcon.setAttribute('data-lucide', 'volume-2');
+    if(heroLabel) heroLabel.textContent = 'Mute fry';
     try{ lucide.createIcons(); }catch(e){}
   } else {
     stopSizzleAudio();
     sizzlePlaying = false;
-    btn.classList.remove('border-gold-400', 'bg-gold-500/20');
-    icon.setAttribute('data-lucide', 'volume-x');
+    if(fryBtn) fryBtn.classList.remove('border-gold-400', 'bg-gold-500/20');
+    if(fryIcon) fryIcon.setAttribute('data-lucide', 'volume-x');
+    if(heroBtn) heroBtn.classList.remove('border-gold-400', 'bg-gold-500/20');
+    if(heroIcon) heroIcon.setAttribute('data-lucide', 'volume-x');
+    if(heroLabel) heroLabel.textContent = 'Hear the fry';
     try{ lucide.createIcons(); }catch(e){}
   }
 }
 
 function startSizzleAudio(){
   try{
-    const ctx = getAudioCtx();
-    if(!ctx) return;
-    const bufferSize = ctx.sampleRate * 2;
-    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() * 2 - 1) * 0.45;
+    if(!authenticSizzleAudio){
+      authenticSizzleAudio = new Audio('videos/fry_sizzle_authentic.mp3');
+      authenticSizzleAudio.loop = true;
+      authenticSizzleAudio.preload = 'auto';
     }
-    sizzleSource = ctx.createBufferSource();
-    sizzleSource.buffer = buffer;
-    sizzleSource.loop = true;
-
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'bandpass';
-    filter.frequency.value = 2400;
-    filter.Q.value = 1.8;
-
-    sizzleGain = ctx.createGain();
-    sizzleGain.gain.setValueAtTime(0.01, ctx.currentTime);
-    sizzleGain.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + 0.3);
-
-    sizzleSource.connect(filter);
-    filter.connect(sizzleGain);
-    sizzleGain.connect(ctx.destination);
-    sizzleSource.start();
+    authenticSizzleAudio.volume = 0.85;
+    authenticSizzleAudio.currentTime = 0;
+    authenticSizzleAudio.play().catch(e => {
+      console.warn('Audio play error:', e);
+    });
   }catch(e){}
 }
 
 function stopSizzleAudio(){
   try{
-    if(sizzleGain){
-      const ctx = getAudioCtx();
-      sizzleGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
-      setTimeout(()=>{
-        if(sizzleSource){ sizzleSource.stop(); sizzleSource.disconnect(); sizzleSource = null; }
-      }, 250);
+    if(authenticSizzleAudio){
+      authenticSizzleAudio.pause();
+      authenticSizzleAudio.currentTime = 0;
     }
   }catch(e){}
 }
